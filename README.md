@@ -28,7 +28,7 @@ Run `ss-to-s3` from the terminal or create a service with Automator and assign a
 
 First you will need to create a __SERVICE__ with automator. Select "run shell script" in Actions and then write `/usr/local/bin/ss-to-s3` as shown here:
 
-![ss-2013-06-04T09-25-03.png](http://blog.auth0.com.s3.amazonaws.com/ss-2013-06-04T09-25-03.png)
+![ss-2013-06-04T09-44-23.png](http://blog.auth0.com.s3.amazonaws.com/ss-2013-06-04T09-44-23.png)
 
 Next you will asign a key shortcut to the service, in System Preferences as shown here:
 
