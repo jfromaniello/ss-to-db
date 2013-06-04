@@ -1,0 +1,25 @@
+{
+  "name": "ss-to-s3",
+  "version": "0.0.1",
+  "description": "Screenshot to S3",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": "",
+  "keywords": [
+    "screenshot",
+    "amazon",
+    "s3",
+    "aws"
+  ],
+  "os": ["darwin"],
+  "bin": "bin/main",
+  "author": "José F. Romaniello <jfromaniello@gmail.com> (http://joseoncode.com)",
+  "license": "MIT",
+  "dependencies": {
+    "tmp": "0.0.20",
+    "aws-sdk": "~1.2.0",
+    "q": "~0.9.4",
+    "moment": "~2.0.0"
+  }
+}

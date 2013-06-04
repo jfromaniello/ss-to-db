@@ -1,0 +1,63 @@
+#!/usr/bin/env node
+
+var Q       = require('q');
+var fs      = require('fs');
+var path    = require('path');
+
+var tmpFile = Q.nfbind(require('tmp').tmpName);
+var exec    = Q.nfbind(require('child_process').exec);
+var AWS     = require('aws-sdk');
+var moment = require('moment');
+
+var config;
+
+//load configuration
+try{
+  config = JSON.parse(fs.readFileSync(path.join(process.env.HOME, '/.ss-to-s3.config')).toString());
+} catch(er) {
+  console.log(er);
+  console.log('Mising ~/.ss-to-s3.config');
+  var example = {
+    "ACCESS_KEY_ID":     "MY-ACCESS-KEY",
+    "ACCESS_KEY_SECRET": "MY-KEY-SECRET",
+    "BUCKET":            "THE-BUCKET",
+    "COPY_FORMAT":       "![{filekey}](http://THE-BUCKET.amazonaws.com/{filekey})"
+  };
+  return console.log('example: \n ', JSON.stringify(example));
+}
+//------------------
+
+
+AWS.config.update({
+  accessKeyId: config.ACCESS_KEY_ID, 
+  secretAccessKey: config.ACCESS_KEY_SECRET
+});
+
+var s3 = new AWS.S3({params: { Bucket:  config.BUCKET}});
+
+tmpFile({template: '/tmp/tmp-XXXXXX.png'})
+  .then(function (file) {
+    return exec('screencapture -i ' + file)
+                .thenResolve(file);
+  })
+  .then(function (file) {
+    var key = 'ss-' + moment().format('YYYY-MM-DDTHH-mm-ss') + '.png';
+
+    return Q.ninvoke(s3, 'putObject', {
+      Key:         key,
+      Body:        fs.readFileSync(file),
+      ContentType: 'image/png'
+    })
+    .then(function(){
+      fs.unlinkSync(file);
+    })
+    .thenResolve(key);
+  })
+  .then(function (file) {
+    var result = config.COPY_FORMAT.replace(/\{filekey\}/ig, file);
+    console.log(result);
+    exec('echo "' + result  + '" | pbcopy');
+  })
+  .then(null, function (err) {
+    console.log(err);
+  });
