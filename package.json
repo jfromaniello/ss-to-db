@@ -1,13 +1,13 @@
 {
   "name": "ss-to-s3",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Screenshot to S3",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "repository": { 
+  "repository": {
     "type": "git",
-    "url":  "git@github.com:jfromaniello/ss-to-s3.git"
+    "url": "git@github.com:jfromaniello/ss-to-s3.git"
   },
   "keywords": [
     "screenshot",
@@ -15,7 +15,9 @@
     "s3",
     "aws"
   ],
-  "os": ["darwin"],
+  "os": [
+    "darwin"
+  ],
   "bin": "bin/main",
   "author": "José F. Romaniello <jfromaniello@gmail.com> (http://joseoncode.com)",
   "license": "MIT",
