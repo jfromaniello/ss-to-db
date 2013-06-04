@@ -23,7 +23,8 @@ try{
     "BUCKET":            "THE-BUCKET",
     "COPY_FORMAT":       "![{filekey}](http://THE-BUCKET.amazonaws.com/{filekey})"
   };
-  return console.log('example: \n ', JSON.stringify(example));
+  console.log('example: \n ', JSON.stringify(example));
+  return process.exit(1);
 }
 //------------------
 
@@ -48,7 +49,6 @@ tmpFile({template: '/tmp/tmp-XXXXXX.png'})
           .thenResolve([file, key]);
   })
   .spread(function (file, key) {
-    console.log(arguments);
     return Q.ninvoke(s3, 'putObject', {
       Key:         key,
       Body:        fs.readFileSync(file),
