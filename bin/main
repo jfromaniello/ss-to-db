@@ -42,7 +42,13 @@ tmpFile({template: '/tmp/tmp-XXXXXX.png'})
   })
   .then(function (file) {
     var key = 'ss-' + moment().format('YYYY-MM-DDTHH-mm-ss') + '.png';
-
+    var result = config.COPY_FORMAT.replace(/\{filekey\}/ig, key);
+    console.log(result);
+    return exec('echo "' + result  + '" | pbcopy')
+          .thenResolve([file, key]);
+  })
+  .spread(function (file, key) {
+    console.log(arguments);
     return Q.ninvoke(s3, 'putObject', {
       Key:         key,
       Body:        fs.readFileSync(file),
@@ -52,11 +58,6 @@ tmpFile({template: '/tmp/tmp-XXXXXX.png'})
       fs.unlinkSync(file);
     })
     .thenResolve(key);
-  })
-  .then(function (file) {
-    var result = config.COPY_FORMAT.replace(/\{filekey\}/ig, file);
-    console.log(result);
-    exec('echo "' + result  + '" | pbcopy');
   })
   .then(null, function (err) {
     console.log(err);
