@@ -6,58 +6,66 @@ var path    = require('path');
 
 var tmpFile = Q.nfbind(require('tmp').tmpName);
 var exec    = Q.nfbind(require('child_process').exec);
-var AWS     = require('aws-sdk');
-var moment = require('moment');
+var moment  = require('moment');
+var Dropbox = require('dropbox');
 
 var config;
 
-//load configuration
-try{
-  config = JSON.parse(fs.readFileSync(path.join(process.env.HOME, '/.ss-to-s3.config')).toString());
-} catch(er) {
-  console.log(er);
-  console.log('Mising ~/.ss-to-s3.config');
-  var example = {
-    "ACCESS_KEY_ID":     "MY-ACCESS-KEY",
-    "ACCESS_KEY_SECRET": "MY-KEY-SECRET",
-    "BUCKET":            "THE-BUCKET",
-    "COPY_FORMAT":       "![{filekey}](http://THE-BUCKET.amazonaws.com/{filekey})"
-  };
-  console.log('example: \n ', JSON.stringify(example));
-  return process.exit(1);
-}
-//------------------
+var configFilePath = path.join(process.env.HOME, '/.ss-to-db.config');
+var dropboxEncodedKey = 'sHgQ+vI0EGA=|jKhIZQGOPu6NUhLQ//7Har0smbRLFn2p6OEU7RyiBQ==';
 
-
-AWS.config.update({
-  accessKeyId: config.ACCESS_KEY_ID, 
-  secretAccessKey: config.ACCESS_KEY_SECRET
+var dbClient = new Dropbox.Client({
+    key: dropboxEncodedKey, sandbox: false
 });
 
-var s3 = new AWS.S3({params: { Bucket:  config.BUCKET}});
+//load configuration
+try{
+  config = JSON.parse(fs.readFileSync(configFilePath).toString());
+  dbClient = new Dropbox.Client({
+    key:         dropboxEncodedKey,
+    token:       config.token,
+    tokenSecret: config.tokenSecret,
+    sandbox:     true
+  });
 
-tmpFile({template: '/tmp/tmp-XXXXXX.png'})
+} catch(er) {
+
+  console.log('We need to get an access token for the first time.');
+  console.log('The token will be saved locally in your machine and not shared with anyone.');
+
+  delete process.env.BROWSER;
+
+  return setTimeout(function () {
+    dbClient.authDriver(new Dropbox.Drivers.NodeServer({port: 8191}));
+    
+    return dbClient.authenticate(function (err, client) {
+      if (err || !client) return process.exit(0);
+      fs.writeFileSync(configFilePath, JSON.stringify({
+        token:       client.oauth.token,
+        tokenSecret: client.oauth.tokenSecret
+      }));
+      process.exit(0);
+    });
+
+  }, 2500);
+
+}
+
+var file = 'ss-' + moment().format('YYYY-MM-DDTHH-mm-ss') + '.png';
+
+exec('screencapture -i /tmp/' + file)
+  .thenResolve(file)
   .then(function (file) {
-    return exec('screencapture -i ' + file)
-                .thenResolve(file);
+    return Q.ninvoke(dbClient, 'writeFile',  file, fs.readFileSync('/tmp/' + file))
+      .then(function (stats) {
+        fs.unlinkSync('/tmp/' + file);
+      }).thenResolve(file);
   })
-  .then(function (file) {
-    var key = 'ss-' + moment().format('YYYY-MM-DDTHH-mm-ss') + '.png';
-    var result = config.COPY_FORMAT.replace(/\{filekey\}/ig, key);
-    console.log(result);
-    return exec('echo "' + result  + '" | pbcopy')
-          .thenResolve([file, key]);
-  })
-  .spread(function (file, key) {
-    return Q.ninvoke(s3, 'putObject', {
-      Key:         key,
-      Body:        fs.readFileSync(file),
-      ContentType: 'image/png'
-    })
-    .then(function(){
-      fs.unlinkSync(file);
-    })
-    .thenResolve(key);
+  .then(function (file){
+    return Q.ninvoke(dbClient, 'makeUrl', file, {download: true})
+      .then(function (link) {
+        return exec('echo "' + link.url  + '" | pbcopy');
+      }).thenResolve(file);
   })
   .then(null, function (err) {
     console.log(err);
