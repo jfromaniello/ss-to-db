@@ -62,7 +62,7 @@ exec('screencapture -i /tmp/' + file)
       }).thenResolve(file);
   })
   .then(function (file){
-    return Q.ninvoke(dbClient, 'makeUrl', file, {download: true})
+    return Q.ninvoke(dbClient, 'makeUrl', file, {downloadHack: true})
       .then(function (link) {
         return exec('echo "' + link.url  + '" | pbcopy');
       }).thenResolve(file);
