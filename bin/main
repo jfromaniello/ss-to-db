@@ -43,7 +43,7 @@ try{
       fs.writeFileSync(configFilePath, JSON.stringify({
         token:       client.oauth.token,
         tokenSecret: client.oauth.tokenSecret
-      }));
+      }, null, 2));
       process.exit(0);
     });
 
@@ -55,6 +55,14 @@ var file = 'ss-' + moment().format('YYYY-MM-DDTHH-mm-ss') + '.png';
 
 exec('screencapture -i /tmp/' + file)
   .thenResolve(file)
+  .then(function (file) {
+    if (config.preview_before_upload) {
+      return exec('open -W -F -a Preview /tmp/' + file)
+                .thenResolve(file);
+    } else {
+      return file;
+    }
+  })
   .then(function (file) {
     return Q.ninvoke(dbClient, 'writeFile',  file, fs.readFileSync('/tmp/' + file))
       .then(function (stats) {

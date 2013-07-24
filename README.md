@@ -36,6 +36,18 @@ Alfred, Apptivate, BetterTouchTool, Butler, iKey, Keyboard Maestro, KeyLauncher,
 
 Thanks to this [answer in stackoverflow](http://apple.stackexchange.com/a/20116/50602).
 
+## Annotate screenshots
+
+The default Preview.app of OSx has very complete Annotate menu under tools, to open preview before upload. 
+
+Edit ~/.ss-to-db.config and add:
+
+~~~
+"preview_before_upload":true
+~~~
+
+__Note:__ you have to close the application from the OSx doc, only closing the window does not work yet.
+
 ## License 
 
 MIT - 2013 - José F. Romaniello
