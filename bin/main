@@ -37,7 +37,7 @@ try{
 
   return setTimeout(function () {
     dbClient.authDriver(new Dropbox.Drivers.NodeServer({port: 8191}));
-    
+
     return dbClient.authenticate(function (err, client) {
       if (err || !client) return process.exit(0);
       fs.writeFileSync(configFilePath, JSON.stringify({
@@ -53,11 +53,13 @@ try{
 
 var file = 'ss-' + moment().format('YYYY-MM-DDTHH-mm-ss') + '.png';
 
+var preview_app = config.preview_app ? config.preview_app : 'open -W -F -a Preview';
+
 exec('screencapture -i /tmp/' + file)
   .thenResolve(file)
   .then(function (file) {
     if (config.preview_before_upload) {
-      return exec('open -W -F -a Preview /tmp/' + file)
+      return exec(preview_app + ' /tmp/' + file)
                 .thenResolve(file);
     } else {
       return file;
